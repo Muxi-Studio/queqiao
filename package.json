@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/Muxi-Studio/queqiao/issues"
   },
-  "homepage": "https://github.com/Muxi-Studio/queqiao#readme"
+  "homepage": "https://github.com/Muxi-Studio/queqiao#readme",
+  "dependencies": {
+    "koa": "^2.2.0"
+  }
 }
