@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/Muxi-Studio/queqiao#readme",
   "dependencies": {
-    "koa": "^2.2.0"
+    "koa": "^2.2.0",
+    "koa-mongo": "^0.7.0",
+    "koa-router": "^5.4.0"
   }
 }
