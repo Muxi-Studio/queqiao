@@ -23,7 +23,7 @@ class Model {
 		return result;
 	}
 	async findAll() {
-		const result = await this.db.collection(this.name).find();
+		const result = await this.db.collection(this.name).find().toArray();
 		if (!result) {
 			throw new Error('Db findOneById error');
 		}
