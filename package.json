@@ -20,6 +20,7 @@
     "koa": "^2.2.0",
     "koa-bodyparser": "^4.2.0",
     "koa-mongo": "^0.7.0",
-    "koa-router": "^7.1.1"
+    "koa-router": "^7.1.1",
+    "mongoose": "^4.9.5"
   }
 }
