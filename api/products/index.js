@@ -1,11 +1,11 @@
 'use strict';
 
-const router = require("koa-router")();
+const product = require("koa-router")();
 const controller = require('./controller.js');
 const multer = require('koa-multer');
 
-router.post('/', controller.insertOne);
-router.get('/',controller.findAll);
+product.post('/', controller.insertOne);
+product.get('/',controller.findAll);
 
-module.exports = router;
+module.exports = product;
 

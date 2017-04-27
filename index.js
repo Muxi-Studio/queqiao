@@ -7,6 +7,8 @@ const app = new koa();
 
 
 require('./model/products.js')
+require('./model/router.js')
+require('./model/mock.js')
 
 app.use(bodyParser());
 
