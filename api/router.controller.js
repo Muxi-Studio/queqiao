@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Product = mongoose.model('Product');
 const Router = mongoose.model('Router');
+var Mock = require('mockjs');
 
 exports.insertOne = async (ctx,next) =>{
 	const router = await Router.findOne({url:ctx.request.body.url})
@@ -34,10 +35,60 @@ exports.findProduct = async (ctx,next) =>{
 	next()
 }
 
-exports.findRoute = async (ctx, next) => {		
+exports.findRoute = async (ctx, next) => {
 	var fragments = ctx.originalUrl.match(/^\/api\/([a-z]+)\/([a-z0-9\/]+)$/)
 	var search = "/" + fragments[2]
-	var result = await Router.find({url:search,productName:fragments[1]},function(err, product){},{});
-	ctx.body = result
+	var result = await Router.findOne({url:search,productName:fragments[1]},function(err, product){},{});
+	var mock_data = Mock.mock(result.mock)
+	ctx.body = mock_data
 	next()
 }
+
+exports.findRouteWithQuery = async(ctx,next) =>{
+	// get route
+	var fragments = ctx.originalUrl.match(/^\/api\/([a-z]+)\/([a-z0-9\/]+)\?(.*)$/)
+	var search = "/" + fragments[2]
+	var result = await Router.findOne({url:search,productName:fragments[1]},function(err, product){},{});
+	
+	// get data
+	var mock_data = Mock.mock(result.mock)
+
+	// get query
+	var query = fragments[3]
+	var query_num
+	let arr = query.split("&")
+	var query_obj = new Object()
+	var meta_query_obj = new Object()
+	arr.forEach((e)=>{
+		let temp = e.split('=')
+		if(query_num = Number(temp[1])){
+			temp[1] = query_num
+		}
+		if(result.meta){
+			if(result.meta.keys().indexOf(temp[0]) == -1){
+				query_obj[temp[0]] = temp[1]			
+			}else{
+				meta_query_obj[temp[0]] = temp[1]
+			}
+		}
+	})
+	var query_obj_keys = query_obj.keys()
+
+
+	// data map query
+	if(Array.isArray(mock_data)){
+		mock_data = mock_data.filter(queryFilter)
+	}else{
+		mock_data = queryFilter(mock_data)
+	}
+
+	// query filter
+	function queryFilter(e){
+		return query_obj_keys.every((key)=>{
+			e[key] === query_obj[key]
+		})
+	}
+
+	ctx.body = mock_data
+}
+

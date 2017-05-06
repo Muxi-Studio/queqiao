@@ -22,5 +22,6 @@
     "koa-mongo": "^0.7.0",
     "koa-router": "^7.1.1",
     "mongoose": "^4.9.5"
-  }
+  },
+  "devDependencies": {}
 }

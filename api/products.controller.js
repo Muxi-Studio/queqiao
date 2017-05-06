@@ -4,7 +4,7 @@ const Product = mongoose.model('Product');
 exports.insertOne = async (ctx,next) =>{
 	const result = await Product.create(ctx.request.body);
 	ctx.body = result
-	return result
+	next()
 }
 
 exports.findAll = async (ctx,next) =>{
@@ -13,6 +13,6 @@ exports.findAll = async (ctx,next) =>{
 		throw new Error('Db findOneByName error');
 	}
 	ctx.body = result
-	return ctx.body;
+	next()
 }
 
