@@ -37,6 +37,10 @@ exports.findProduct = async (ctx,next) =>{
 
 exports.findRoute = async (ctx, next) => {
 	var fragments = ctx.originalUrl.match(/^\/api\/([a-z]+)\/([a-z0-9\/]+)$/)
+	// var frm = fragments[2].slice(-1)
+	// if(frm === '/') {
+	// 	fragments[2] = fragments[2].slice(0,-1)
+	// }
 	var search = "/" + fragments[2]
 	var result = await Router.findOne({url:search,productName:fragments[1]},function(err, product){},{});
 	var mock_data = Mock.mock(result.mock)
@@ -56,7 +60,9 @@ exports.findRouteWithQuery = async(ctx,next) =>{
 	// get query
 	var query = fragments[3]
 	var query_num
-	let arr = query.split("&")
+
+	var arr = query.split("&")
+
 	var query_obj = new Object()
 	var meta_query_obj = new Object()
 	arr.forEach((e)=>{
@@ -65,15 +71,16 @@ exports.findRouteWithQuery = async(ctx,next) =>{
 			temp[1] = query_num
 		}
 		if(result.meta){
-			if(result.meta.keys().indexOf(temp[0]) == -1){
+			if(Object.keys(result.meta).indexOf(temp[0]) == -1){
 				query_obj[temp[0]] = temp[1]			
 			}else{
 				meta_query_obj[temp[0]] = temp[1]
 			}
+		}else{
+			query_obj[temp[0]] = temp[1]
 		}
 	})
-	var query_obj_keys = query_obj.keys()
-
+	var query_obj_keys = Object.keys(query_obj)
 
 	// data map query
 	if(Array.isArray(mock_data)){
@@ -85,7 +92,7 @@ exports.findRouteWithQuery = async(ctx,next) =>{
 	// query filter
 	function queryFilter(e){
 		return query_obj_keys.every((key)=>{
-			e[key] === query_obj[key]
+			return e[key] == query_obj[key]
 		})
 	}
 

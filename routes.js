@@ -12,7 +12,7 @@ module.exports = function(app){
 	Router.post('/products', product_controller.insertOne);
 	Router.get('/products',product_controller.findAll);
 
-	Router.get(/^\/api\/([a-z]+)\/([a-z0-9\/]+)?(.*)$/, router_controller.findRouteWithQuery)
+	Router.get(/^\/api\/([a-z]+)\/([a-z0-9\/]+)\\?(.*)$/, router_controller.findRouteWithQuery)
 	Router.get(/^\/api\/([a-z]+)\/([a-z0-9\/]+)$/, router_controller.findRoute)
 
 	Router.post('/product/:product', router_controller.insertOne);
