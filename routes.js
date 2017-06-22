@@ -14,10 +14,11 @@ module.exports = function(app){
 
 //	Router.get(/^\/api\/([a-z]+)\/([a-z0-9\/]+)\?(.*)$/, router_controller.findRouteWithQuery)
 	Router.get(/^\/api\/([a-z]+)\/([a-z0-9\/]+)$/, router_controller.findRoute)
+	Router.post(/^\/api\/([a-z]+)\/([a-z0-9\/]+)$/, router_controller.findRoute)
 
-	Router.post('/product/:product', router_controller.insertOne);
-	Router.get('/routers', router_controller.findAll);
-	Router.get('/product/:product', router_controller.findProduct);
+	Router.post('/product/:productName', router_controller.insertOne);
+	// Router.get('/routers', router_controller.findAll);
+	Router.get('/product/:productName', router_controller.findProduct);
 
 	app.use(Router.routes());
 }

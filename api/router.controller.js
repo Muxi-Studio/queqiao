@@ -2,34 +2,43 @@ const mongoose = require('mongoose');
 const Product = mongoose.model('Product');
 const Router = mongoose.model('Router');
 var Mock = require('mockjs');
+var reg = new RegExp(/\:([a-z]+)/g);
 
 exports.insertOne = async (ctx,next) =>{
 	const router = await Router.findOne({url:ctx.request.body.url})
 	if(router) {
-		throw new Error('Router already exists')
+		// throw new Error('Router already exists')
+		ctx.throw('Router already exists', 401);
+		// next(createError(500, 'Router already exists'));
 	}
-	const product = await Product.findOne({productName:ctx.params.product})
+	const product = await Product.findOne({productName:ctx.params.productName})
 	ctx.request.body.productId = product.id
-	ctx.request.body.productName = ctx.params.product
+	ctx.request.body.productName = ctx.params.productName
+	let urlStr = ctx.request.body.url
+	if(reg.test(urlStr)){
+		urlStr = urlStr.replace(reg,"([a-z0-9]+)")
+	}
+	ctx.request.body.regex = urlStr + '$'
 	const result = await Router.create(ctx.request.body);
 	ctx.body = result
 	next()
 }
 
-exports.findAll = async (ctx,next) =>{
-	const result = await Router.find({},function(err, product){},{});
-	if (!result) {
-		throw new Error('Db findAll error');
-	}
-	ctx.body = result
-	next()
-}
+// exports.findAll = async (ctx,next) =>{
+// 	const result = await Router.find({},function(err, product){},{});
+// 	if (!result) {
+// 		throw new Error('Db findAll error');
+// 	}
+// 	ctx.body = result
+// 	next()
+// }
 
 exports.findProduct = async (ctx,next) =>{
 	console.log("Product")
-	const result = await Router.find({productName:ctx.params.product},function(err, product){},{})
-	if(!result) {
-		throw new Error('Db findProduct error')
+	const result = await Router.find({productName:ctx.params.productName},function(err, product){},{})
+	if(result.length == 0) {
+		// throw new Error('Db findProduct error')
+		ctx.throw(`${ctx.params.productName} does not exist in Product list`, 404);
 	}
 	ctx.body = result
 	next()
@@ -37,17 +46,40 @@ exports.findProduct = async (ctx,next) =>{
 
 exports.findRoute = async (ctx, next) => {
 	var fragments = ctx.originalUrl.match(/^\/api\/([a-z]+)\/([a-z0-9\/]+)$/)
-	if(fragments){
-		var search = "/" + fragments[2]
-		var result = await Router.findOne({url:search,productName:fragments[1]},function(err, product){},{});
-		var mock_data = Mock.mock(result.mock)
+	
+	var checkRoute = (result,search)=>{
+		let matchRoute = (e)=>{
+			let regex = new RegExp(e.regex)
+			return regex.test(search)
+		}
+
+		if(result.length == 0){
+			ctx.throw('No Product matched', 404);
+		}
+		let route = result.find(matchRoute)
+		if(!route){
+			ctx.throw('No Router matched', 404);
+		}else if(!route.mock){
+			ctx.throw('No mock data', 404);
+		}
+		return route
+	}
+
+	if(fragments){	
+		var search = "/" + fragments[2]	
+		var result = await Router.find({productName:fragments[1]},function(err, product){},{});
+
+		let foundRoute = checkRoute(result,search)
+
+		var mock_data = Mock.mock(foundRoute.mock)
 		ctx.body = mock_data
-	}else if (fragments = ctx.originalUrl.match(/^\/api\/([a-z]+)\/([a-z0-9\/]+)\?(.*)$/)) {
+	}else if(fragments = ctx.originalUrl.match(/^\/api\/([a-z]+)\/([a-z0-9\/]+)\?(.*)$/)){
 		var search = "/" + fragments[2]
-		var result = await Router.findOne({url:search,productName:fragments[1]},function(err, product){},{});
-		
-		// get data
-		var mock_data = Mock.mock(result.mock)
+		var result = await Router.find({productName:fragments[1]},function(err, product){},{});
+
+		let foundRoute = checkRoute(result,search)
+
+		var mock_data = Mock.mock(route.mock)
 
 		// get query
 		var query = fragments[3]
@@ -77,8 +109,8 @@ exports.findRoute = async (ctx, next) => {
 		// data map query
 		if(Array.isArray(mock_data)){
 			mock_data = mock_data.filter(queryFilter)
-		}else{
-			mock_data = queryFilter(mock_data)
+		}else if(!queryFilter(mock_data)){
+			mock_data = null;
 		}
 
 		// query filter
@@ -88,12 +120,13 @@ exports.findRoute = async (ctx, next) => {
 			})
 		}
 
+		if(!mock_data || mock_data.length == 0){
+			ctx.throw('No mock data matched', 404);
+		}
+
 		ctx.body = mock_data
 	}
 	next()
 }
 
-// exports.findRouteWithQuery = async(ctx,next) =>{
-
-// }
 

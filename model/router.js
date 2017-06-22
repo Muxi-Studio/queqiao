@@ -8,6 +8,9 @@ let routerSchema = mongoose.Schema({
     productName:{
         type:String
     },
+    regex:{
+        type:String
+    },
     url: {
         type:String
     },
