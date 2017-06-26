@@ -22,6 +22,9 @@ let routerSchema = mongoose.Schema({
     },
     mock:{
         type:Object
+    },
+    meta:{
+        type:Object
     }
 });
 

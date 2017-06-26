@@ -15,9 +15,11 @@ exports.insertOne = async (ctx,next) =>{
 	ctx.request.body.productId = product.id
 	ctx.request.body.productName = ctx.params.productName
 	let urlStr = ctx.request.body.url
+
 	if(reg.test(urlStr)){
 		urlStr = urlStr.replace(reg,"([a-z0-9]+)")
 	}
+
 	ctx.request.body.regex = urlStr + '$'
 	const result = await Router.create(ctx.request.body);
 	ctx.body = result
@@ -79,7 +81,7 @@ exports.findRoute = async (ctx, next) => {
 
 		let foundRoute = checkRoute(result,search)
 
-		var mock_data = Mock.mock(route.mock)
+		var mock_data = Mock.mock(foundRoute.mock)
 
 		// get query
 		var query = fragments[3]
@@ -89,36 +91,50 @@ exports.findRoute = async (ctx, next) => {
 
 		var query_obj = new Object()
 		var meta_query_obj = new Object()
+
 		arr.forEach((e)=>{
 			let temp = e.split('=')
 			if(query_num = Number(temp[1])){
 				temp[1] = query_num
 			}
-			if(result.meta){
-				if(Object.keys(result.meta).indexOf(temp[0]) == -1){
-					query_obj[temp[0]] = temp[1]			
+			if(foundRoute.meta){
+				if(Object.keys(foundRoute.meta).indexOf(temp[0]) != -1){
+					meta_query_obj[temp[0]] = temp[1]								
 				}else{
-					meta_query_obj[temp[0]] = temp[1]
+					query_obj[temp[0]] = temp[1]
 				}
 			}else{
 				query_obj[temp[0]] = temp[1]
 			}
 		})
-		var query_obj_keys = Object.keys(query_obj)
 
-		// data map query
-		if(Array.isArray(mock_data)){
-			mock_data = mock_data.filter(queryFilter)
-		}else if(!queryFilter(mock_data)){
-			mock_data = null;
-		}
+
+		var query_obj_keys = Object.keys(query_obj)
+		var meta_query_obj_keys = Object.keys(meta_query_obj)
+
 
 		// query filter
-		function queryFilter(e){
+		var queryFilter = (e)=>{
 			return query_obj_keys.every((key)=>{
 				return e[key] == query_obj[key]
 			})
 		}
+
+		// data map query
+		if(Array.isArray(mock_data)){
+			mock_data = mock_data.filter(queryFilter)
+			if(meta_query_obj_keys.indexOf('count')!=-1){
+				var count = meta_query_obj['count']
+				if(count <= mock_data.length){
+					mock_data = mock_data.slice(0,count)
+				}
+			}
+		}else if(!queryFilter(mock_data)){
+			mock_data = null;
+		}
+
+
+
 
 		if(!mock_data || mock_data.length == 0){
 			ctx.throw('No mock data matched', 404);
